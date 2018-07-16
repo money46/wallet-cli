@@ -4,6 +4,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,8 @@ public class Client {
 
   private static final Logger logger = LoggerFactory.getLogger("Client");
   private WalletClient wallet;
+  private HashSet<String> addressSet = new HashSet<>();
+
 
   public String registerWallet(char[] password) throws CipherException, IOException {
     if (!WalletClient.passwordValid(password)) {
@@ -550,11 +553,17 @@ public class Client {
         }
         if (!ownerAddress.isEmpty()) {
           String address = WalletClient.encode58Check(ownerAddress.toByteArray());
-          transferAsset(address, tokenName, 100);
+          if(!addressSet.contains(address)) {
+            transferAsset(address, tokenName, 11);
+            addressSet.add(address);
+          }
         }
         if (!toAddress.isEmpty()) {
           String address = WalletClient.encode58Check(toAddress.toByteArray());
-          transferAsset(address, tokenName, 100);
+          if(!addressSet.contains(address)) {
+            transferAsset(address, tokenName, 10);
+            addressSet.add(address);
+          }
         }
 
       } catch (Exception e) {
