@@ -1086,6 +1086,19 @@ public class TestClient {
     }
   }
 
+  private void airDrop(String[] parameters) {
+    if (parameters == null || parameters.length != 3) {
+      System.out.println("airDrop needs 3 parameters like following: ");
+      System.out.println("airDrop tokenName fromBlockNumber endBlockNumber ");
+      return;
+    }
+
+    String tokenName = parameters[0];
+    long start = Long.parseLong(parameters[1]);
+    long end = Long.parseLong(parameters[2]);
+    client.airDrop(tokenName, start, end);
+  }
+
   private void help() {
     System.out.println("Help: List of Tron Wallet-cli commands");
     System.out.println(
@@ -1142,6 +1155,7 @@ public class TestClient {
     System.out.println("getcontract");
     System.out.println("UpdateAsset");
     System.out.println("UnfreezeAsset");
+    System.out.println("AirDrop");
     System.out.println("Exit or Quit");
 
     System.out.println("Input any one of the listed commands, to display how-to tips.");
@@ -1419,6 +1433,8 @@ public class TestClient {
             generateAddress();
             break;
           }
+          case "airdrop":
+            airDrop(parameters);
           case "exit":
           case "quit": {
             System.out.println("Exit !!!");

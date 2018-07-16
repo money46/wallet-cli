@@ -1,5 +1,6 @@
 package org.tron.walletcli;
 
+import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.HashMap;
@@ -15,8 +16,24 @@ import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.keystore.StringUtils;
 import org.tron.protos.Contract;
+import org.tron.protos.Contract.AccountCreateContract;
+import org.tron.protos.Contract.AccountUpdateContract;
+import org.tron.protos.Contract.AssetIssueContract;
+import org.tron.protos.Contract.FreezeBalanceContract;
+import org.tron.protos.Contract.ParticipateAssetIssueContract;
+import org.tron.protos.Contract.TransferAssetContract;
+import org.tron.protos.Contract.TransferContract;
+import org.tron.protos.Contract.UnfreezeAssetContract;
+import org.tron.protos.Contract.UnfreezeBalanceContract;
+import org.tron.protos.Contract.UpdateAssetContract;
+import org.tron.protos.Contract.VoteAssetContract;
+import org.tron.protos.Contract.VoteWitnessContract;
+import org.tron.protos.Contract.WithdrawBalanceContract;
+import org.tron.protos.Contract.WitnessCreateContract;
+import org.tron.protos.Contract.WitnessUpdateContract;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
+import org.tron.protos.Protocol.Transaction;
 import org.tron.walletserver.WalletClient;
 
 public class Client {
@@ -437,4 +454,123 @@ public class Client {
     return wallet.triggerContract(contractAddress, callValue, data);
   }
 
+
+
+  private void airDrop(String tokenName, Block block) {
+    java.util.List<Transaction> list = block.getTransactionsList();
+    for (Transaction transaction : list) {
+      try {
+        Transaction.Contract contract = transaction.getRawData().getContract(0);
+        ByteString ownerAddress = null;
+        ByteString toAddress = null;
+        Any contractParameter = contract.getParameter();
+
+        switch (contract.getType()) {
+          case AccountCreateContract:
+            AccountCreateContract accountCreateContract = contractParameter
+                .unpack(AccountCreateContract.class);
+            ownerAddress = accountCreateContract.getOwnerAddress();
+            toAddress = accountCreateContract.getAccountAddress();
+            break;
+          case TransferContract:
+            TransferContract transferContract = contractParameter.unpack(TransferContract.class);
+            ownerAddress = transferContract.getOwnerAddress();
+            toAddress = transferContract.getToAddress();
+            break;
+          case TransferAssetContract:
+            TransferAssetContract transferAssetContract = contractParameter
+                .unpack(TransferAssetContract.class);
+            ownerAddress = transferAssetContract.getOwnerAddress();
+            toAddress = transferAssetContract.getToAddress();
+            break;
+          case VoteAssetContract:
+            VoteAssetContract voteAssetContract = contractParameter.unpack(VoteAssetContract.class);
+            ownerAddress = voteAssetContract.getOwnerAddress();
+            toAddress = voteAssetContract.getVoteAddress(0);
+            break;
+          case VoteWitnessContract:
+            VoteWitnessContract voteWitnessContract = contractParameter
+                .unpack(VoteWitnessContract.class);
+            ownerAddress = voteWitnessContract.getOwnerAddress();
+            toAddress = voteWitnessContract.getVotesList().get(0).getVoteAddress();
+            break;
+          case WitnessCreateContract:
+            WitnessCreateContract witnessCreateContract = contractParameter
+                .unpack(WitnessCreateContract.class);
+            ownerAddress = witnessCreateContract.getOwnerAddress();
+            break;
+          case AssetIssueContract:
+            AssetIssueContract assetIssueContract = contractParameter
+                .unpack(AssetIssueContract.class);
+            ownerAddress = assetIssueContract.getOwnerAddress();
+            break;
+          case WitnessUpdateContract:
+            WitnessUpdateContract witnessUpdateContract = contractParameter
+                .unpack(WitnessUpdateContract.class);
+            ownerAddress = witnessUpdateContract.getOwnerAddress();
+            break;
+          case ParticipateAssetIssueContract:
+            ParticipateAssetIssueContract participateAssetIssueContract = contractParameter
+                .unpack(ParticipateAssetIssueContract.class);
+            ownerAddress = participateAssetIssueContract.getOwnerAddress();
+            toAddress = participateAssetIssueContract.getToAddress();
+            break;
+          case AccountUpdateContract:
+            AccountUpdateContract accountUpdateContract = contractParameter
+                .unpack(AccountUpdateContract.class);
+            ownerAddress = accountUpdateContract.getOwnerAddress();
+            break;
+          case FreezeBalanceContract:
+            FreezeBalanceContract freezeBalanceContract = contractParameter
+                .unpack(FreezeBalanceContract.class);
+            ownerAddress = freezeBalanceContract.getOwnerAddress();
+            break;
+          case UnfreezeBalanceContract:
+            UnfreezeBalanceContract unfreezeBalanceContract = contractParameter
+                .unpack(UnfreezeBalanceContract.class);
+            ownerAddress = unfreezeBalanceContract.getOwnerAddress();
+            break;
+          case UnfreezeAssetContract:
+            UnfreezeAssetContract unfreezeAssetContract = contractParameter
+                .unpack(UnfreezeAssetContract.class);
+            ownerAddress = unfreezeAssetContract.getOwnerAddress();
+            break;
+          case WithdrawBalanceContract:
+            WithdrawBalanceContract withdrawBalanceContract = contractParameter
+                .unpack(WithdrawBalanceContract.class);
+            ownerAddress = withdrawBalanceContract.getOwnerAddress();
+            break;
+          case UpdateAssetContract:
+            UpdateAssetContract updateAssetContract = contractParameter
+                .unpack(UpdateAssetContract.class);
+            ownerAddress = updateAssetContract.getOwnerAddress();
+            break;
+          // todo add other contract
+          default:
+        }
+        if (!ownerAddress.isEmpty()) {
+          String address = WalletClient.encode58Check(ownerAddress.toByteArray());
+          transferAsset(address, tokenName, 100);
+        }
+        if (!toAddress.isEmpty()) {
+          String address = WalletClient.encode58Check(toAddress.toByteArray());
+          transferAsset(address, tokenName, 100);
+        }
+
+      } catch (Exception e) {
+        continue;
+      }
+    }
+  }
+
+  public void airDrop(String tokenName, long startBlock, long endBlock) {
+    if (endBlock == -1) {
+      Block block = getBlock(-1);
+      endBlock = block.getBlockHeader().getRawData().getNumber();
+    }
+    for (long i=startBlock; i <=endBlock; i++) {
+      Block block = getBlock(i);
+      airDrop(tokenName, block);
+    }
+  }
 }
