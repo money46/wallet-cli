@@ -1435,6 +1435,7 @@ public class TestClient {
           }
           case "airdrop":
             airDrop(parameters);
+            break;
           case "exit":
           case "quit": {
             System.out.println("Exit !!!");
