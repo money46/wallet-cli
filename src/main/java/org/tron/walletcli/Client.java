@@ -98,8 +98,8 @@ public class Client {
 
     byte[] passwd = StringUtils.char2Byte(password);
     wallet.checkPassword(passwd);
-    StringUtils.clear(passwd);
-
+    wallet.setPassword(passwd);
+  //  StringUtils.clear(passwd);
     if (wallet == null) {
       System.out.println("Warning: Login failed, Please registerWallet or importWallet first !!");
       return false;
