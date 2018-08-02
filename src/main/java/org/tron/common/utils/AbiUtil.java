@@ -2,6 +2,7 @@ package org.tron.common.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.bouncycastle.util.encoders.Hex;
 import org.tron.common.crypto.Hash;
@@ -68,21 +69,46 @@ public class AbiUtil {
     boolean match = false;
 
     if (type.matches("^bytes([0-9]*)$"))
-      return new CoderFixBytes();
+      return new CoderFixedBytes();
 
     if (type.matches("^(u?int)([0-9]*)$"))
       return new CoderNumber();
 
-    if (type.matches("^(.*)\\[([0-9]*)\\]$"))
-      return new CoderArray();
+
+    Pattern r = Pattern.compile("^(.*)\\[([0-9]*)\\]$");
+    // 现在创建 matcher 对象
+    Matcher m = r.matcher(type);
+
+    if (m.groupCount() > 0) {
+      String arrayType = m.group(1);
+      int length = Integer.valueOf(m.group(2));
+      return new CoderArray(arrayType, length);
+    }
+//    if (type.matches("^(.*)\\[([0-9]*)\\]$"))
+//      return new CoderArray();
 
     return null;
   }
 
   static class CoderArray extends Coder {
+    private String arrayType;
+    private int length;
+    public CoderArray(String arrayType, int length) {
+      this.arrayType = arrayType;
+      this.length = length;
+    }
 
     @Override
     byte[] encode(String value) {
+      int count = this.length;
+      byte[] result = new byte[4];
+      if (this.length == -1) {
+        result = new DataWord(value.getBytes().length).getData();
+      }
+
+
+
+
       return new byte[0];
     }
 
@@ -108,11 +134,15 @@ public class AbiUtil {
 
 //  static class
 
-  static class CoderFixBytes extends  Coder {
+  static class CoderFixedBytes extends  Coder {
 
     @Override
     byte[] encode(String value) {
-      return new byte[0];
+      if (value.startsWith("0x")) {
+        return new DataWord(value.substring(2)).getData();
+      } else {
+        return new DataWord(value).getData();
+      }
     }
 
     @Override
