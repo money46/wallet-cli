@@ -579,6 +579,7 @@ public class Client {
     }
     for (long i=endBlock; i >=startBlock; i--) {
       System.out.println("airdrop to the block " + i);
+      System.out.println("the newest airdrop block is " + endBlock);
       Block block = getBlock(i);
       airDrop(tokenName, block);
     }
