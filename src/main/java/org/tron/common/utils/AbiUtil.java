@@ -59,7 +59,7 @@ public class AbiUtil {
       case "address":
         return new CoderAddress();
       case "string":
-        return new StringAddress();
+        return new CoderString();
       case "bool":
         return new CoderBool();
       case "bytes":
@@ -76,12 +76,14 @@ public class AbiUtil {
 
 
     Pattern r = Pattern.compile("^(.*)\\[([0-9]*)\\]$");
-    // 现在创建 matcher 对象
     Matcher m = r.matcher(type);
 
     if (m.groupCount() > 0) {
       String arrayType = m.group(1);
-      int length = Integer.valueOf(m.group(2));
+      int length = -1;
+      if (!m.group(2).equals("")) {
+        length = Integer.valueOf(m.group(2));
+      }
       return new CoderArray(arrayType, length);
     }
 //    if (type.matches("^(.*)\\[([0-9]*)\\]$"))
@@ -91,25 +93,35 @@ public class AbiUtil {
   }
 
   static class CoderArray extends Coder {
-    private String arrayType;
+    private String elementType;
     private int length;
+
     public CoderArray(String arrayType, int length) {
-      this.arrayType = arrayType;
+      this.elementType = arrayType;
       this.length = length;
+
+      if (length == -1) {
+        this.dynamic = true;
+      }
     }
 
     @Override
-    byte[] encode(String value) {
+    byte[] encode(String arrayValues) {
       int count = this.length;
-      byte[] result = new byte[4];
-      if (this.length == -1) {
-        result = new DataWord(value.getBytes().length).getData();
+
+      Coder coder = getParamCoder(elementType);
+      List<Coder> coders = new ArrayList<>();
+      for (int i = 0; i < count; i++) {
+        coders.add(coder);
       }
 
+      String[] values = arrayValues.split(",");
 
-
-
-      return new byte[0];
+      if (this.length == -1) {
+        return concat(new DataWord(values.length).getData(), pack(coders, values));
+      } else {
+        return pack(coders, values);
+      }
     }
 
     @Override
@@ -202,8 +214,8 @@ public class AbiUtil {
 
 //  static class
 
-  static class StringAddress extends  Coder {
-    StringAddress() {
+  static class CoderString extends  Coder {
+    CoderString() {
       dynamic = true;
     }
 
@@ -349,6 +361,19 @@ public class AbiUtil {
 
 //    System.out.println(Hex.encode(pack(coders, values1)));
 
+  }
+
+  public static byte[] concat(byte[] ... byteArrays) {
+    int length = 0;
+    for (byte[] bytes: byteArrays) {
+      length += bytes.length;
+    }
+    byte[] ret = new byte[length];
+    int index = 0;
+    for(byte[] bytes: byteArrays) {
+      System.arraycopy(bytes, 0, ret, index, bytes.length);
+    }
+    return ret;
   }
 
 
