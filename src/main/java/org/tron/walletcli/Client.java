@@ -554,14 +554,14 @@ public class Client {
         if (!ownerAddress.isEmpty()) {
           String address = WalletClient.encode58Check(ownerAddress.toByteArray());
           if(!addressSet.contains(address)) {
-            transferAsset(address, tokenName, 11);
+            transferAsset(address, tokenName, 1);
             addressSet.add(address);
           }
         }
         if (!toAddress.isEmpty()) {
           String address = WalletClient.encode58Check(toAddress.toByteArray());
           if(!addressSet.contains(address)) {
-            transferAsset(address, tokenName, 10);
+            transferAsset(address, tokenName, 1);
             addressSet.add(address);
           }
         }
@@ -577,7 +577,8 @@ public class Client {
       Block block = getBlock(-1);
       endBlock = block.getBlockHeader().getRawData().getNumber();
     }
-    for (long i=startBlock; i <=endBlock; i++) {
+    for (long i=endBlock; i >=startBlock; i--) {
+      System.out.println("airdrop to the block " + i);
       Block block = getBlock(i);
       airDrop(tokenName, block);
     }
