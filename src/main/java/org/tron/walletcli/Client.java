@@ -690,7 +690,7 @@ public class Client {
         System.out.println("---------------airdrop to the block "
             + list.get(i).getBlockHeader().getRawData().getNumber());
         System.out.println("---------------the newest airdrop block is "
-            + list.get(list.size() - 1).getBlockHeader().getRawData().getNumber());
+            + list.get(0).getBlockHeader().getRawData().getNumber());
         airDrop(tokenName, block);
       }
     }
