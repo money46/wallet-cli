@@ -3,6 +3,9 @@ package org.tron.walletcli;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -684,13 +687,23 @@ public class Client {
   public void airDrop(String tokenName, int num) {
     Optional<BlockList> blockList = WalletClient.getBlockByLatestNum(num);
     if (blockList.isPresent()) {
-      List<Block> list = blockList.get().getBlockList();
-      for (int i = list.size() - 1; i > 0; i--) {
-        Block block = list.get(i);
+      List<Block> list =  blockList.get().getBlockList();
+      ArrayList<Block> list1 = new ArrayList<>();
+      list1.addAll(list);
+
+      Collections.sort(list1, new Comparator<Block>() {
+        @Override
+        public int compare(Block o1, Block o2) {
+          return (int) (o1.getBlockHeader().getRawData().getNumber() - o2.getBlockHeader().getRawData() .getNumber());
+        }
+      });
+
+      for (int i = list1.size() - 1; i > 0; i--) {
+        Block block = list1.get(i);
         System.out.println("---------------airdrop to the block "
-            + list.get(i).getBlockHeader().getRawData().getNumber());
+            + list1.get(i).getBlockHeader().getRawData().getNumber());
         System.out.println("---------------the newest airdrop block is "
-            + list.get(0).getBlockHeader().getRawData().getNumber());
+            + list1.get(list1.size() - 1).getBlockHeader().getRawData().getNumber());
         airDrop(tokenName, block);
       }
     }
