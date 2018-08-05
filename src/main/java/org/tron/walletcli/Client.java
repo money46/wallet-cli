@@ -669,13 +669,13 @@ public class Client {
             addressSet.add(address);
           }
         }
-        if (!toAddress.isEmpty()) {
-          String address = WalletClient.encode58Check(toAddress.toByteArray());
-          if(!addressSet.contains(address)) {
-            transferAsset(address, tokenName, 1);
-            addressSet.add(address);
-          }
-        }
+//        if (!toAddress.isEmpty()) {
+//          String address = WalletClient.encode58Check(toAddress.toByteArray());
+//          if(!addressSet.contains(address)) {
+//            transferAsset(address, tokenName, 1);
+//            addressSet.add(address);
+//          }
+//        }
 
       } catch (Exception e) {
         continue;
