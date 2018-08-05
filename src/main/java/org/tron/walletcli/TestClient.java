@@ -1438,9 +1438,7 @@ public class TestClient {
     }
 
     String tokenName = parameters[0];
-    long start = Long.parseLong(parameters[1]);
-    long end = Long.parseLong(parameters[2]);
-    client.airDrop(tokenName, start, end);
+    client.airDrop(tokenName, 200);
   }
 
   private void help() {

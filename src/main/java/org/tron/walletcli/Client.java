@@ -5,6 +5,7 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.tron.api.GrpcAPI;
 import org.tron.api.GrpcAPI.AddressPrKeyPairMessage;
 import org.tron.api.GrpcAPI.AssetIssueList;
 import org.tron.api.GrpcAPI.BlockExtention;
+import org.tron.api.GrpcAPI.BlockList;
 import org.tron.api.GrpcAPI.NodeList;
 import org.tron.api.GrpcAPI.ProposalList;
 import org.tron.api.GrpcAPI.WitnessList;
@@ -36,9 +38,9 @@ import org.tron.protos.Contract.WitnessCreateContract;
 import org.tron.protos.Contract.WitnessUpdateContract;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
-import org.tron.protos.Protocol.Transaction;
 import org.tron.protos.Protocol.ChainParameters;
 import org.tron.protos.Protocol.Proposal;
+import org.tron.protos.Protocol.Transaction;
 import org.tron.walletserver.WalletClient;
 
 public class Client {
@@ -679,16 +681,18 @@ public class Client {
     }
   }
 
-  public void airDrop(String tokenName, long startBlock, long endBlock) {
-    if (endBlock == -1) {
-      Block block = getBlock(-1);
-      endBlock = block.getBlockHeader().getRawData().getNumber();
-    }
-    for (long i=endBlock; i >=endBlock - 100; i--) {
-      System.out.println("---------------airdrop to the block " + i);
-      System.out.println("---------------the newest airdrop block is " + endBlock);
-      Block block = getBlock(i);
-      airDrop(tokenName, block);
+  public void airDrop(String tokenName, int num) {
+    Optional<BlockList> blockList = WalletClient.getBlockByLatestNum(num);
+    if (blockList.isPresent()) {
+      List<Block> list = blockList.get().getBlockList();
+      for (int i = list.size() - 1; i > 0; i--) {
+        Block block = list.get(i);
+        System.out.println("---------------airdrop to the block "
+            + list.get(i).getBlockHeader().getRawData().getNumber());
+        System.out.println("---------------the newest airdrop block is "
+            + list.get(list.size() - 1).getBlockHeader().getRawData().getNumber());
+        airDrop(tokenName, block);
+      }
     }
   }
 }
