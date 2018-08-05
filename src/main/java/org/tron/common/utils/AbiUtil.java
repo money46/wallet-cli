@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.bouncycastle.util.encoders.Hex;
+import org.springframework.util.Assert;
 import org.tron.common.crypto.Hash;
 import org.tron.walletserver.WalletClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -102,17 +103,14 @@ public class AbiUtil {
       if (length == -1) {
         this.dynamic = true;
       }
+      this.dynamic = true;
     }
 
     @Override
     byte[] encode(String arrayValues) {
-      int count = this.length;
 
       Coder coder = getParamCoder(elementType);
-      List<Coder> coders = new ArrayList<>();
-      for (int i = 0; i < count; i++) {
-        coders.add(coder);
-      }
+
 
       List<Object> strings = null;
       try {
@@ -122,11 +120,28 @@ public class AbiUtil {
         e.printStackTrace();
       }
 
+      List<Coder> coders = new ArrayList<>();
+
+      if (this.length == -1) {
+        for (int i = 0; i < strings.size(); i++) {
+          coders.add(coder);
+        }
+      } else {
+        for (int i = 0; i < this.length; i++) {
+          coders.add(coder);
+        }
+      }
+
 //      String[] values = arrayValues.split(",");
 
       if (this.length == -1) {
+        System.out.println("array encoded");
+        System.out.println(Hex.toHexString(concat(new DataWord(strings.size()).getData(), pack(coders, strings))));
+        System.out.println("fdsfsdf");
         return concat(new DataWord(strings.size()).getData(), pack(coders, strings));
       } else {
+        System.out.println(Hex.toHexString(pack(coders, strings)));
+
         return pack(coders, strings);
       }
     }
@@ -276,8 +291,6 @@ public class AbiUtil {
       Coder coder = codes.get(idx);
       String value = values.get(idx).toString();
 
-
-
       byte[] encoded = coder.encode(value);
 
       encodedList.add(encoded);
@@ -362,31 +375,28 @@ public class AbiUtil {
 
 //    String listString = "[\"A\",\"B\",\"C   \"，1]";
     String method1 = "test(uint256,string,string,uint256[])";
+    String expected1  = "db103cf30000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000014200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000143000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003";
     String method2 = "test(uint256,string,string,uint256[3])";
-    String listString = "[5 ,\"B\",\"C\", [1, 2, 3]]";
+    String expected2 = "";
+    String listString = "5 ,\"B\",\"C\", [1, 2, 3]";
+
+    String listString1 = "[1, 2, 3]";
+    String method3 = "test(uint256[])";
+    String method4 = "test(uint256[3])";
 
 
+    System.out.println("");
 
-    System.out.println(parseMethod(method1, listString));
+//    System.out.println(parseMethod(method3, listString1));
 
-    System.out.println(parseMethod(method2, listString));
+    System.out.println(parseMethod(method4, listString1));
+//    Assert.isTrue(parseMethod(method1, listString).equals(expected1));
+//
+//    Assert.isTrue(parseMethod(method2, listString).equals(expected2));
+
 
 //    List<String> strList =
 //    String jsonString="[{'id':'1'},{'id':'2'}]";
-    ObjectMapper mapper = new ObjectMapper();
-    try {
-      List<Object> strings = mapper.readValue(listString, List.class);
-
-
-      for (Object s : strings) {
-
-
-        System.out.println(s);
-        System.out.println(s.getClass());
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
 //    List<Bean> beanList = mapper.readValue(jsonString, new TypeReference<List<Bean>>() {});
 
 
@@ -427,6 +437,7 @@ public class AbiUtil {
     int index = 0;
     for(byte[] bytes: bytesArray) {
       System.arraycopy(bytes, 0, ret, index, bytes.length);
+      index += bytes.length;
     }
     return ret;
   }
